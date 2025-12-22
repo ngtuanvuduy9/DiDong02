@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { FontAwesome } from "@expo/vector-icons";
+import React, { useState } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
@@ -6,82 +7,70 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
-} from 'react-native';
-// Sử dụng FontAwesome cho logo Facebook/Google
-import { FontAwesome } from '@expo/vector-icons';
+    View,
+} from "react-native";
 
-// Import 3 screens
-import ForgotPasswordScreen from './ForgotPasswordScreen';
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
+import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
 
-type ScreenType = 'login' | 'register' | 'forgot';
+type ScreenType = "login" | "register" | "forgot";
 
 export default function AuthScreen() {
-    const [currentScreen, setCurrentScreen] = useState<ScreenType>('login');
+    const [currentScreen, setCurrentScreen] = useState<ScreenType>("login");
 
-    // Nếu đang ở màn hình Quên mật khẩu
-    if (currentScreen === 'forgot') {
-        return <ForgotPasswordScreen onBackToLogin={() => setCurrentScreen('login')} />;
+    if (currentScreen === "forgot") {
+        return (
+            <ForgotPasswordScreen
+                onBackToLogin={() => setCurrentScreen("login")}
+            />
+        );
     }
 
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-
-                {/* Container chính (thay cho div bao ngoài) */}
                 <View style={styles.card}>
-
-                    {/* Header màu tím */}
+                    {/* HEADER */}
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Chào mừng!</Text>
                         <Text style={styles.headerSubtitle}>
-                            {currentScreen === 'login' ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản mới'}
+                            {currentScreen === "login"
+                                ? "Đăng nhập để tiếp tục"
+                                : "Tạo tài khoản mới"}
                         </Text>
                     </View>
 
-                    {/* Form Container */}
+                    {/* FORM */}
                     <View style={styles.formBody}>
-
-                        {/* Hiển thị Login hoặc Register */}
-                        {currentScreen === 'login' ? (
-                            <LoginForm onForgotPassword={() => setCurrentScreen('forgot')} />
+                        {currentScreen === "login" ? (
+                            <LoginForm
+                                onForgotPassword={() => setCurrentScreen("forgot")}
+                                onRegister={() => setCurrentScreen("register")}
+                            />
                         ) : (
-                            <RegisterForm />
+                            <RegisterForm
+                                onBackToLogin={() => setCurrentScreen("login")}
+                            />
                         )}
 
-                        {/* Nút chuyển đổi giữa Login/Register */}
-                        <View style={styles.toggleContainer}>
-                            <Text style={styles.textGray}>
-                                {currentScreen === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-                            </Text>
-                            <TouchableOpacity onPress={() => setCurrentScreen(currentScreen === 'login' ? 'register' : 'login')}>
-                                <Text style={styles.linkText}>
-                                    {currentScreen === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Đường kẻ ngang (Divider) */}
+                        {/* Divider */}
                         <View style={styles.dividerContainer}>
                             <View style={styles.dividerLine} />
                             <Text style={styles.dividerText}>Hoặc tiếp tục với</Text>
                             <View style={styles.dividerLine} />
                         </View>
 
-                        {/* Social Login Buttons */}
+                        {/* Social */}
                         <View style={styles.socialContainer}>
-                            {/* Google Button */}
                             <TouchableOpacity style={styles.socialButton}>
                                 <FontAwesome name="google" size={20} color="#EA4335" />
                                 <Text style={styles.socialText}>Google</Text>
                             </TouchableOpacity>
 
-                            {/* Facebook Button */}
                             <TouchableOpacity style={styles.socialButton}>
                                 <FontAwesome name="facebook" size={20} color="#1877F2" />
                                 <Text style={styles.socialText}>Facebook</Text>
@@ -97,96 +86,68 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: 'center',
+        justifyContent: "center",
         padding: 20,
-        backgroundColor: '#000000', // Nền đen tuyền
+        backgroundColor: "#000",
     },
     card: {
-        backgroundColor: '#1a1a1a', // Đen nhẹ
+        backgroundColor: "#1a1a1a",
         borderRadius: 24,
-        overflow: 'hidden',
-        shadowColor: '#ffffff',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 16,
-        elevation: 8,
+        overflow: "hidden",
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: "#2a2a2a",
     },
     header: {
-        backgroundColor: '#000000',
+        backgroundColor: "#000",
         paddingVertical: 40,
-        paddingHorizontal: 20,
-        alignItems: 'center',
+        alignItems: "center",
         borderBottomWidth: 1,
-        borderBottomColor: '#333333',
+        borderBottomColor: "#333",
     },
     headerTitle: {
         fontSize: 32,
-        fontWeight: '900',
-        color: '#ffffff',
-        marginBottom: 8,
-        letterSpacing: 1,
+        fontWeight: "900",
+        color: "#fff",
     },
     headerSubtitle: {
-        color: '#999999',
+        color: "#999",
         fontSize: 16,
-        letterSpacing: 0.5,
     },
     formBody: {
         padding: 24,
     },
-    toggleContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 24,
-        marginBottom: 24,
-    },
-    textGray: {
-        color: '#999999',
-        fontSize: 15,
-    },
-    linkText: {
-        color: '#ffffff',
-        fontWeight: '700',
-        textDecorationLine: 'underline',
-    },
     dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
+        flexDirection: "row",
+        alignItems: "center",
+        marginVertical: 24,
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#333333',
+        backgroundColor: "#333",
     },
     dividerText: {
         marginHorizontal: 12,
-        color: '#666666',
+        color: "#666",
         fontSize: 11,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
     },
     socialContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexDirection: "row",
         gap: 15,
     },
     socialButton: {
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
         paddingVertical: 14,
         borderWidth: 1,
-        borderColor: '#333333',
+        borderColor: "#333",
         borderRadius: 12,
-        backgroundColor: '#000000',
     },
     socialText: {
         marginLeft: 8,
-        color: '#ffffff',
-        fontWeight: '600',
+        color: "#fff",
+        fontWeight: "600",
     },
 });
