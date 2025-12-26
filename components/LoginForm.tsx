@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { router } from "expo-router";
+import { useState } from "react";
 import {
   Alert,
   StyleSheet,
@@ -7,20 +8,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import userApi from "../api/userApi";
+import { login } from "../services/user.service";
 
 type Props = {
   onForgotPassword: () => void;
   onRegister: () => void;
+  onLoginSuccess?: () => void;
 };
 
-export default function LoginForm({
-  onForgotPassword,
-  onRegister,
-}: Props) {
+export default function LoginForm({ onForgotPassword, onLoginSuccess }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,25 +27,22 @@ export default function LoginForm({
     }
 
     try {
-      setLoading(true);
-
-      const res = await userApi.login({ email, password });
-
-      console.log("LOGIN OK:", res.data);
-      Alert.alert("Thành công", "Đăng nhập thành công");
-
+      await login(email, password);
+      // Gọi callback thay vì router.replace
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch (err: any) {
-      Alert.alert(
-        "Đăng nhập thất bại",
-        err?.response?.data || "Lỗi kết nối server"
-      );
-    } finally {
-      setLoading(false);
+      Alert.alert("Lỗi", err.message);
     }
   };
 
   return (
     <View>
+      <Text style={styles.title}>Đăng nhập</Text>
+
       <TextInput
         placeholder="Email"
         style={styles.input}
@@ -64,51 +59,47 @@ export default function LoginForm({
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text style={styles.loginText}>
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Đăng nhập</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onForgotPassword}>
-        <Text style={styles.link}>Quên mật khẩu?</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={onRegister}>
-        <Text style={styles.link}>Chưa có tài khoản? Đăng ký</Text>
+        <Text style={styles.forgot}>Quên mật khẩu?</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 20,
+    textAlign: "center",
+  },
   input: {
     borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 10,
+    borderColor: "#ddd",
+    borderRadius: 8,
     padding: 12,
-    marginBottom: 16,
-    color: "#fff",
+    marginBottom: 14,
+    backgroundColor: "#fafafa",
   },
-  loginButton: {
-    backgroundColor: "#007bff",
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 16,
+  button: {
+    backgroundColor: "#ee4d2d",
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginTop: 10,
   },
-  loginText: {
+  buttonText: {
     color: "#fff",
     textAlign: "center",
     fontWeight: "700",
+    fontSize: 16,
   },
-  link: {
-    color: "#fff",
-    textAlign: "center",
+  forgot: {
     marginTop: 12,
-    textDecorationLine: "underline",
+    textAlign: "center",
+    color: "#ee4d2d",
   },
 });

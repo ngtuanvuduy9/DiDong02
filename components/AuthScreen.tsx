@@ -1,153 +1,72 @@
-import { FontAwesome } from "@expo/vector-icons";
-import React, { useState } from "react";
-import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
-
-import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 
-type ScreenType = "login" | "register" | "forgot";
+type ScreenType = "login" | "register";
 
-export default function AuthScreen() {
-    const [currentScreen, setCurrentScreen] = useState<ScreenType>("login");
+type Props = {
+    onLoginSuccess?: () => void;
+};
 
-    if (currentScreen === "forgot") {
-        return (
-            <ForgotPasswordScreen
-                onBackToLogin={() => setCurrentScreen("login")}
-            />
-        );
-    }
+export default function AuthScreen({ onLoginSuccess }: Props) {
+    const [screen, setScreen] = useState<ScreenType>("login");
 
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.card}>
-                    {/* HEADER */}
-                    <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Chào mừng!</Text>
-                        <Text style={styles.headerSubtitle}>
-                            {currentScreen === "login"
-                                ? "Đăng nhập để tiếp tục"
-                                : "Tạo tài khoản mới"}
-                        </Text>
-                    </View>
+        <View style={styles.container}>
+            <Text style={styles.logo}>Sopi</Text>
 
-                    {/* FORM */}
-                    <View style={styles.formBody}>
-                        {currentScreen === "login" ? (
-                            <LoginForm
-                                onForgotPassword={() => setCurrentScreen("forgot")}
-                                onRegister={() => setCurrentScreen("register")}
-                            />
-                        ) : (
-                            <RegisterForm
-                                onBackToLogin={() => setCurrentScreen("login")}
-                            />
-                        )}
+            <View style={styles.card}>
+                {screen === "login" ? (
+                    <LoginForm
+                        onForgotPassword={() => { }}
+                        onRegister={() => setScreen("register")}
+                        onLoginSuccess={onLoginSuccess}
+                    />
+                ) : (
+                    <RegisterForm onBackToLogin={() => setScreen("login")} />
+                )}
+            </View>
 
-                        {/* Divider */}
-                        <View style={styles.dividerContainer}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>Hoặc tiếp tục với</Text>
-                            <View style={styles.dividerLine} />
-                        </View>
-
-                        {/* Social */}
-                        <View style={styles.socialContainer}>
-                            <TouchableOpacity style={styles.socialButton}>
-                                <FontAwesome name="google" size={20} color="#EA4335" />
-                                <Text style={styles.socialText}>Google</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.socialButton}>
-                                <FontAwesome name="facebook" size={20} color="#1877F2" />
-                                <Text style={styles.socialText}>Facebook</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+            <TouchableOpacity
+                onPress={() =>
+                    setScreen(screen === "login" ? "register" : "login")
+                }
+            >
+                <Text style={styles.switchText}>
+                    {screen === "login"
+                        ? "Chưa có tài khoản? Đăng ký"
+                        : "Đã có tài khoản? Đăng nhập"}
+                </Text>
+            </TouchableOpacity>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    scrollContainer: {
-        flexGrow: 1,
+    container: {
+        flex: 1,
+        backgroundColor: "#f5f5f5",
         justifyContent: "center",
         padding: 20,
-        backgroundColor: "#000",
+    },
+    logo: {
+        fontSize: 36,
+        fontWeight: "900",
+        color: "#ee4d2d",
+        textAlign: "center",
+        marginBottom: 30,
     },
     card: {
-        backgroundColor: "#1a1a1a",
-        borderRadius: 24,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "#2a2a2a",
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 20,
+        elevation: 4,
     },
-    header: {
-        backgroundColor: "#000",
-        paddingVertical: 40,
-        alignItems: "center",
-        borderBottomWidth: 1,
-        borderBottomColor: "#333",
-    },
-    headerTitle: {
-        fontSize: 32,
-        fontWeight: "900",
-        color: "#fff",
-    },
-    headerSubtitle: {
-        color: "#999",
-        fontSize: 16,
-    },
-    formBody: {
-        padding: 24,
-    },
-    dividerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginVertical: 24,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: "#333",
-    },
-    dividerText: {
-        marginHorizontal: 12,
-        color: "#666",
-        fontSize: 11,
-    },
-    socialContainer: {
-        flexDirection: "row",
-        gap: 15,
-    },
-    socialButton: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        paddingVertical: 14,
-        borderWidth: 1,
-        borderColor: "#333",
-        borderRadius: 12,
-    },
-    socialText: {
-        marginLeft: 8,
-        color: "#fff",
+    switchText: {
+        marginTop: 20,
+        textAlign: "center",
+        color: "#ee4d2d",
         fontWeight: "600",
     },
 });
