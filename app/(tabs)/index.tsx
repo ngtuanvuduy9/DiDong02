@@ -1,6 +1,6 @@
 import ProductCard from "@/components/ProductCard";
 import SearchBar from "@/components/SearchBar";
-import { getProducts } from "@/services/fakestore.service";
+import { getProducts } from "@/services/api.service";
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 

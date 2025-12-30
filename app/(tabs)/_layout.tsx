@@ -7,10 +7,10 @@ export default function TabsLayout() {
         name="index"
         options={{ title: "Trang chủ" }}
       />
-      {/* <Tabs.Screen
+      <Tabs.Screen
         name="cart"
         options={{ title: "Giỏ hàng" }}
-      /> */}
+      />
 
       <Tabs.Screen
         name="profile"
