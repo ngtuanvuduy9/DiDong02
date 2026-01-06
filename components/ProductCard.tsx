@@ -1,14 +1,31 @@
-import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
+import { CART_KEY, FAVORITE_KEY } from "@/constants/storage";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-
-
-const CART_KEY = "CART_ITEMS";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function ProductCard({ item }: any) {
     const router = useRouter();
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    /* 🔥 KIỂM TRA SP CÓ TRONG FAVORITE KHÔNG */
+    useEffect(() => {
+        checkFavorite();
+    }, []);
+
+    const checkFavorite = async () => {
+        const json = await AsyncStorage.getItem(FAVORITE_KEY);
+        const favorites = json ? JSON.parse(json) : [];
+        const exists = favorites.some((p: any) => p.id === item.id);
+        setIsFavorite(exists);
+    };
 
     const goDetail = () => {
         router.push({
@@ -17,6 +34,7 @@ export default function ProductCard({ item }: any) {
         });
     };
 
+    /* 🛒 THÊM GIỎ */
     const addToCart = async () => {
         const json = await AsyncStorage.getItem(CART_KEY);
         const cart = json ? JSON.parse(json) : [];
@@ -39,12 +57,49 @@ export default function ProductCard({ item }: any) {
         alert("Đã thêm vào giỏ hàng 🛒");
     };
 
+    /* ❤️ TOGGLE FAVORITE */
+    const toggleFavorite = async () => {
+        const json = await AsyncStorage.getItem(FAVORITE_KEY);
+        let favorites = json ? JSON.parse(json) : [];
+
+        if (isFavorite) {
+            // ❌ XOÁ
+            favorites = favorites.filter((p: any) => p.id !== item.id);
+            setIsFavorite(false);
+        } else {
+            // ✅ THÊM
+            favorites.push({
+                id: item.id,
+                title: item.title,
+                price: item.price,
+                mainImage: item.mainImage,
+            });
+            setIsFavorite(true);
+        }
+
+        await AsyncStorage.setItem(FAVORITE_KEY, JSON.stringify(favorites));
+    };
+
     return (
         <View style={styles.card}>
+            {/* ❤️ ICON */}
+            <TouchableOpacity
+                style={styles.favoriteIcon}
+                onPress={toggleFavorite}
+            >
+                <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color="red"
+                />
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={goDetail}>
                 <Image
                     source={{
-                        uri: item.mainImage || "https://via.placeholder.com/150",
+                        uri:
+                            item.mainImage ||
+                            "https://via.placeholder.com/150",
                     }}
                     style={styles.image}
                 />
@@ -56,7 +111,6 @@ export default function ProductCard({ item }: any) {
                 </Text>
             </TouchableOpacity>
 
-            {/* 👉 BUTTON */}
             <TouchableOpacity style={styles.cartBtn} onPress={addToCart}>
                 <Text style={styles.cartText}>Thêm vào giỏ</Text>
             </TouchableOpacity>
@@ -75,6 +129,7 @@ const styles = StyleSheet.create({
         padding: 10,
         flex: 1,
         margin: 6,
+        position: "relative",
     },
     image: {
         height: 120,
@@ -90,18 +145,6 @@ const styles = StyleSheet.create({
         color: "#ee4d2d",
         fontWeight: "700",
     },
-    detailBtn: {
-        marginTop: 8,
-        backgroundColor: "#007bff",
-        paddingVertical: 6,
-        borderRadius: 6,
-        alignItems: "center",
-    },
-    detailText: {
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: "600",
-    },
     cartBtn: {
         marginTop: 6,
         backgroundColor: "#ee4d2d",
@@ -114,5 +157,22 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "600",
     },
-
+    detailBtn: {
+        marginTop: 8,
+        backgroundColor: "#007bff",
+        paddingVertical: 6,
+        borderRadius: 6,
+        alignItems: "center",
+    },
+    detailText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "600",
+    },
+    favoriteIcon: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        zIndex: 10,
+    },
 });

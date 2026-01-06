@@ -1,29 +1,52 @@
-import axios from "axios";
+import api from "./api";
 
-const API_URL = "http://localhost:8080/api";
+/* =======================
+   PRODUCTS
+======================= */
+
 export const getProducts = async () => {
-    const res = await axios.get(`${API_URL}/products`);
-    return res.data.data; // ✅ RẤT QUAN TRỌNG
-};
-
-
-export const getProductById = async (id: number) => {
-    const res = await axios.get(`${API_URL}/products/${id}`);
-    return res.data;
-};
-export const getProductsByCategory = async (categoryId: number) => {
-    const res = await axios.get(
-        `${API_URL}/products/category/${categoryId}`
-    );
+    const res = await api.get("/products");
     return res.data.data;
 };
 
+export const getProductById = async (id: number) => {
+    const res = await api.get(`/products/${id}`);
+    return res.data.data;
+};
+
+export const getProductsByCategory = async (categoryId: number) => {
+    const res = await api.get(`/products/category/${categoryId}`);
+    return res.data.data;
+};
+
+/* =======================
+   CATEGORIES
+======================= */
+
 export const getCategories = async () => {
-    const res = await axios.get(`${API_URL}/categories`);
-    return res.data.data; // lấy đúng data
+    const res = await api.get("/categories");
+    return res.data.data;
 };
 
 export const getActiveCategories = async () => {
-    const res = await axios.get(`${API_URL}/categories/active`);
+    const res = await api.get("/categories/active");
+    return res.data.data;
+};
+
+/* =======================
+   AUTHORS
+======================= */
+
+export const getAuthors = async () => {
+    const res = await api.get("/authors");
+    return res.data.data;
+};
+
+/* =======================
+   PUBLISHERS
+======================= */
+
+export const getPublishers = async () => {
+    const res = await api.get("/publishers");
     return res.data.data;
 };

@@ -46,8 +46,9 @@ export default function HomeScreen() {
         /* 🔥 HEADER CHUẨN */
         ListHeaderComponent={
           <>
-            <CategoryList onSelect={handleCategorySelect} />
             <SearchBar value={keyword} onChange={setKeyword} />
+
+            <CategoryList onSelect={handleCategorySelect} />
           </>
         }
       />

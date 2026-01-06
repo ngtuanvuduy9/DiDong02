@@ -1,0 +1,3 @@
+// DÙNG CHUNG TOÀN APP
+export const CART_KEY = "CART_ITEMS";
+export const FAVORITE_KEY = "FAVORITE_ITEMS";

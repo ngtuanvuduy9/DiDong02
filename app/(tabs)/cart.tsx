@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
     FlatList,
@@ -7,17 +7,22 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 
 const CART_KEY = "CART_ITEMS";
 
 export default function CartScreen() {
+    const router = useRouter();
     const [items, setItems] = useState<any[]>([]);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
+    // 🔄 Load giỏ hàng
     const loadCart = async () => {
         const json = await AsyncStorage.getItem(CART_KEY);
-        setItems(json ? JSON.parse(json) : []);
+        const cart = json ? JSON.parse(json) : [];
+        setItems(cart);
+        setSelectedIds([]); // reset chọn
     };
 
     useFocusEffect(
@@ -26,104 +31,70 @@ export default function CartScreen() {
         }, [])
     );
 
-    // ➕➖ TĂNG / GIẢM
+    // ➕➖ tăng giảm số lượng
     const changeQty = async (id: number, delta: number) => {
-        const json = await AsyncStorage.getItem(CART_KEY);
-        let cart = json ? JSON.parse(json) : [];
+        let cart = [...items];
 
         cart = cart
-            .map((item: any) =>
+            .map(item =>
                 item.id === id
                     ? { ...item, quantity: item.quantity + delta }
                     : item
             )
-            .filter((item: any) => item.quantity > 0); // <=0 thì xoá
+            .filter(item => item.quantity > 0);
 
         await AsyncStorage.setItem(CART_KEY, JSON.stringify(cart));
         setItems(cart);
+
+        // nếu SP bị xoá thì bỏ khỏi selected
+        setSelectedIds(prev =>
+            prev.filter(selectedId =>
+                cart.some(i => i.id === selectedId)
+            )
+        );
     };
 
-    // ❌ XOÁ SẢN PHẨM
+    // ❌ xoá 1 sản phẩm
     const removeItem = async (id: number) => {
-        const json = await AsyncStorage.getItem(CART_KEY);
-        const cart = json ? JSON.parse(json) : [];
-
-        const newCart = cart.filter((item: any) => item.id !== id);
-
-        await AsyncStorage.setItem(CART_KEY, JSON.stringify(newCart));
-        setItems(newCart);
+        const cart = items.filter(i => i.id !== id);
+        await AsyncStorage.setItem(CART_KEY, JSON.stringify(cart));
+        setItems(cart);
+        setSelectedIds(prev => prev.filter(i => i !== id));
     };
 
-    const total = items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
+    // 🧹 xoá tất cả
     const clearCart = async () => {
         await AsyncStorage.removeItem(CART_KEY);
         setItems([]);
+        setSelectedIds([]);
     };
+
+    // ☑️ chọn tất cả
+    const toggleSelectAll = () => {
+        if (selectedIds.length === items.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(items.map(i => i.id));
+        }
+    };
+
+    // 💰 tổng tiền (CHỈ tính SP đã chọn)
+    const total = items
+        .filter(i => selectedIds.includes(i.id))
+        .reduce((sum, i) => sum + i.price * i.quantity, 0);
 
     return (
         <View style={styles.container}>
-            <FlatList
-                data={items}
-                keyExtractor={(item) => item.id.toString()}
-                ListEmptyComponent={
-                    <Text style={{ textAlign: "center", marginTop: 40 }}>
-                        Giỏ hàng trống
-                    </Text>
-                }
-                renderItem={({ item }) => (
-                    <View style={styles.item}>
-                        <Image
-                            source={{
-                                uri:
-                                    item.mainImage ||
-                                    "https://via.placeholder.com/100",
-                            }}
-                            style={styles.image}
-                        />
-
-                        <View style={{ flex: 1 }}>
-                            <Text numberOfLines={2}>{item.title}</Text>
-
-                            {/* ➕➖ */}
-                            <View style={styles.qtyRow}>
-                                <TouchableOpacity
-                                    style={styles.qtyBtn}
-                                    onPress={() => changeQty(item.id, -1)}
-                                >
-                                    <Text style={styles.qtyText}>-</Text>
-                                </TouchableOpacity>
-
-                                <Text style={styles.qtyNumber}>
-                                    {item.quantity}
-                                </Text>
-
-                                <TouchableOpacity
-                                    style={styles.qtyBtn}
-                                    onPress={() => changeQty(item.id, 1)}
-                                >
-                                    <Text style={styles.qtyText}>+</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <Text style={styles.price}>
-                                {(item.price * item.quantity).toLocaleString()} ₫
-                            </Text>
-                        </View>
-
-                        {/* ❌ */}
-                        <TouchableOpacity
-                            onPress={() => removeItem(item.id)}
-                        >
-                            <Text style={styles.remove}>✕</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            />
+            {/* HEADER */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Giỏ hàng</Text>
+                <TouchableOpacity onPress={toggleSelectAll}>
+                    <Text style={styles.checkbox}>
+                        {selectedIds.length === items.length && items.length > 0
+                            ? "☑️"
+                            : "⬜"}{" "}
+                        Chọn tất cả
+                    </Text>
+                </TouchableOpacity>
 
                 {items.length > 0 && (
                     <TouchableOpacity onPress={clearCart}>
@@ -132,10 +103,113 @@ export default function CartScreen() {
                 )}
             </View>
 
+            {/* DANH SÁCH */}
+            <FlatList
+                data={items}
+                keyExtractor={item => item.id.toString()}
+                ListEmptyComponent={
+                    <Text style={styles.empty}>Giỏ hàng trống</Text>
+                }
+                renderItem={({ item }) => {
+                    const checked = selectedIds.includes(item.id);
+
+                    return (
+                        <View style={styles.item}>
+                            {/* CHECKBOX */}
+                            <TouchableOpacity
+                                onPress={() =>
+                                    setSelectedIds(prev =>
+                                        checked
+                                            ? prev.filter(i => i !== item.id)
+                                            : [...prev, item.id]
+                                    )
+                                }
+                            >
+                                <Text style={styles.checkbox}>
+                                    {checked ? "☑️" : "⬜"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <Image
+                                source={{
+                                    uri:
+                                        item.mainImage ||
+                                        "https://via.placeholder.com/100",
+                                }}
+                                style={styles.image}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text numberOfLines={2}>
+                                    {item.title}
+                                </Text>
+
+                                {/* ➕➖ */}
+                                <View style={styles.qtyRow}>
+                                    <TouchableOpacity
+                                        style={styles.qtyBtn}
+                                        onPress={() =>
+                                            changeQty(item.id, -1)
+                                        }
+                                    >
+                                        <Text>-</Text>
+                                    </TouchableOpacity>
+
+                                    <Text style={styles.qtyNumber}>
+                                        {item.quantity}
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        style={styles.qtyBtn}
+                                        onPress={() =>
+                                            changeQty(item.id, 1)
+                                        }
+                                    >
+                                        <Text>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <Text style={styles.price}>
+                                    {(item.price * item.quantity).toLocaleString()} ₫
+                                </Text>
+                            </View>
+
+                            {/* ❌ */}
+                            <TouchableOpacity
+                                onPress={() => removeItem(item.id)}
+                            >
+                                <Text style={styles.remove}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+                    );
+                }}
+            />
+
+            {/* FOOTER */}
             <View style={styles.footer}>
                 <Text style={styles.total}>
-                    Tổng tiền: {total.toLocaleString()} ₫
+                    Tổng: {total.toLocaleString()} ₫
                 </Text>
+
+                <TouchableOpacity
+                    style={[
+                        styles.buyBtn,
+                        selectedIds.length === 0 && { opacity: 0.5 },
+                    ]}
+                    disabled={selectedIds.length === 0}
+                    onPress={() =>
+                        router.push({
+                            pathname: "/checkout",
+                            params: {
+                                ids: JSON.stringify(selectedIds),
+                            },
+                        })
+                    }
+                >
+                    <Text style={styles.buyText}>
+                        Mua hàng ({selectedIds.length})
+                    </Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -145,6 +219,24 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#f5f5f5",
         padding: 10,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 10,
+    },
+    checkbox: {
+        fontSize: 16,
+    },
+    clearAll: {
+        color: "#ee4d2d",
+        fontWeight: "600",
+    },
+    empty: {
+        textAlign: "center",
+        marginTop: 40,
+        color: "#666",
     },
     item: {
         flexDirection: "row",
@@ -158,24 +250,12 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         resizeMode: "contain",
-        marginRight: 10,
+        marginHorizontal: 8,
     },
     price: {
         color: "#ee4d2d",
         fontWeight: "700",
         marginTop: 4,
-    },
-    footer: {
-        padding: 12,
-        backgroundColor: "#fff",
-        borderTopWidth: 1,
-        borderColor: "#ddd",
-    },
-    total: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: "#ee4d2d",
-        textAlign: "right",
     },
     qtyRow: {
         flexDirection: "row",
@@ -185,18 +265,13 @@ const styles = StyleSheet.create({
     qtyBtn: {
         width: 28,
         height: 28,
-        borderRadius: 4,
         backgroundColor: "#eee",
         justifyContent: "center",
         alignItems: "center",
-    },
-    qtyText: {
-        fontSize: 18,
-        fontWeight: "700",
+        borderRadius: 4,
     },
     qtyNumber: {
         marginHorizontal: 10,
-        fontSize: 14,
         fontWeight: "600",
     },
     remove: {
@@ -204,20 +279,25 @@ const styles = StyleSheet.create({
         color: "#999",
         paddingLeft: 6,
     },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 10,
+    footer: {
+        backgroundColor: "#fff",
+        padding: 12,
+        borderRadius: 10,
     },
-    headerTitle: {
-        fontSize: 18,
+    total: {
+        fontSize: 16,
+        fontWeight: "700",
+        marginBottom: 10,
+        textAlign: "right",
+    },
+    buyBtn: {
+        backgroundColor: "#ee4d2d",
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    buyText: {
+        color: "#fff",
         fontWeight: "700",
     },
-    clearAll: {
-        color: "#ee4d2d",
-        fontSize: 14,
-        fontWeight: "600",
-    },
-
 });

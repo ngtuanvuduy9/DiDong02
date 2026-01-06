@@ -1,10 +1,21 @@
 import AuthScreen from "@/components/AuthScreen";
 import { getCurrentUser, logout } from "@/services/user.service";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Button, Modal, StyleSheet, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    Button,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function Profile() {
+    const router = useRouter();
+
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +46,6 @@ export default function Profile() {
 
     const handleLoginSuccess = async () => {
         setShowLoginModal(false);
-        // Reload user info
         const currentUser = await getCurrentUser();
         setUser(currentUser);
     };
@@ -52,6 +62,7 @@ export default function Profile() {
         }
     };
 
+    /* ================= LOADING ================= */
     if (isLoading) {
         return (
             <View style={styles.container}>
@@ -60,7 +71,7 @@ export default function Profile() {
         );
     }
 
-    // Chưa đăng nhập
+    /* ================= CHƯA ĐĂNG NHẬP ================= */
     if (!user) {
         return (
             <>
@@ -68,7 +79,9 @@ export default function Profile() {
                     <Text style={styles.title}>Tài khoản của tôi</Text>
 
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>Vui lòng đăng nhập để xem tài khoản</Text>
+                        <Text style={styles.emptyText}>
+                            Vui lòng đăng nhập để xem tài khoản
+                        </Text>
                     </View>
 
                     <View style={styles.buttonContainer}>
@@ -93,19 +106,38 @@ export default function Profile() {
         );
     }
 
-    // Đã đăng nhập
+    /* ================= ĐÃ ĐĂNG NHẬP ================= */
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Tài khoản của tôi</Text>
 
+            {/* THÔNG TIN USER */}
             <View style={styles.userInfo}>
-                <Text style={styles.label}>Tên:</Text>
-                <Text style={styles.value}>{user.name}</Text>
+                <Text style={styles.label}>Tên</Text>
+                <Text style={styles.value}>{user.username}</Text>
 
-                <Text style={styles.label}>Email:</Text>
-                <Text style={styles.value}>{user.email}</Text>
+                {/* <Text style={styles.label}>Email</Text>
+                <Text style={styles.value}>{user.email}</Text> */}
             </View>
 
+            {/* MENU */}
+            <View style={styles.menuBox}>
+                <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => router.push("/fav")}
+                >
+                    <Text style={styles.menuText}>❤️ Sản phẩm yêu thích</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => router.push("/cart")}
+                >
+                    <Text style={styles.menuText}>🛒 Giỏ hàng của tôi</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* LOGOUT */}
             <View style={styles.buttonContainer}>
                 <Button
                     title={loading ? "Đang đăng xuất..." : "Đăng xuất"}
@@ -113,12 +145,19 @@ export default function Profile() {
                     disabled={loading}
                     color="#ee4d2d"
                 />
-                {loading && <ActivityIndicator size="small" color="#ee4d2d" style={{ marginTop: 10 }} />}
+                {loading && (
+                    <ActivityIndicator
+                        size="small"
+                        color="#ee4d2d"
+                        style={{ marginTop: 10 }}
+                    />
+                )}
             </View>
         </View>
     );
 }
 
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -135,11 +174,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         padding: 15,
         borderRadius: 8,
-        marginBottom: 30,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        marginBottom: 20,
         elevation: 3,
     },
     label: {
@@ -154,8 +189,28 @@ const styles = StyleSheet.create({
         marginTop: 5,
         fontWeight: "500",
     },
+
+    /* MENU */
+    menuBox: {
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        marginBottom: 30,
+        elevation: 3,
+    },
+    menuItem: {
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderColor: "#eee",
+    },
+    menuText: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#333",
+    },
+
     buttonContainer: {
-        marginTop: 20,
+        marginTop: 10,
     },
     emptyState: {
         flex: 1,

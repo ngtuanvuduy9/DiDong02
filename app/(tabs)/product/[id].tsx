@@ -1,4 +1,9 @@
-import { getProductById } from "@/services/api.service";
+import {
+    getAuthors,
+    getCategories,
+    getProductById,
+    getPublishers,
+} from "@/services/api.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -19,13 +24,24 @@ export default function ProductDetailScreen() {
     const router = useRouter();
 
     const [product, setProduct] = useState<any>(null);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [authors, setAuthors] = useState<any[]>([]);
+    const [publishers, setPublishers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    /* ================= LOAD DATA ================= */
     useEffect(() => {
-        const loadProduct = async () => {
+        const loadData = async () => {
             try {
-                const res = await getProductById(Number(id));
-                setProduct(res.data);
+                const productData = await getProductById(Number(id));
+                const categoryData = await getCategories();
+                const authorData = await getAuthors();
+                const publisherData = await getPublishers();
+
+                setProduct(productData);        // ⚠️ KHÔNG .data
+                setCategories(categoryData);
+                setAuthors(authorData);
+                setPublishers(publisherData);
             } catch (error) {
                 console.error("Load product failed:", error);
             } finally {
@@ -33,9 +49,20 @@ export default function ProductDetailScreen() {
             }
         };
 
-        if (id) loadProduct();
+        if (id) loadData();
     }, [id]);
 
+    /* ================= HELPER ================= */
+    const getCategoryName = (id: number) =>
+        categories.find(c => c.id === id)?.name || "—";
+
+    const getAuthorName = (id: number) =>
+        authors.find(a => a.id === id)?.name || "—";
+
+    const getPublisherName = (id: number) =>
+        publishers.find(p => p.id === id)?.name || "—";
+
+    /* ================= ADD TO CART ================= */
     const addToCart = async () => {
         const json = await AsyncStorage.getItem(CART_KEY);
         const cart = json ? JSON.parse(json) : [];
@@ -58,6 +85,7 @@ export default function ProductDetailScreen() {
         alert("Đã thêm vào giỏ hàng 🛒");
     };
 
+    /* ================= UI STATE ================= */
     if (loading) {
         return (
             <View style={styles.center}>
@@ -81,9 +109,9 @@ export default function ProductDetailScreen() {
                 ? "⚠️ Sắp hết"
                 : "❌ Hết hàng";
 
+    /* ================= RENDER ================= */
     return (
         <ScrollView style={styles.container}>
-            {/* ẢNH */}
             <Image
                 source={{
                     uri: product.mainImage || "https://via.placeholder.com/300",
@@ -91,7 +119,6 @@ export default function ProductDetailScreen() {
                 style={styles.image}
             />
 
-            {/* NỘI DUNG */}
             <View style={styles.content}>
                 <Text style={styles.title}>{product.title}</Text>
 
@@ -103,49 +130,45 @@ export default function ProductDetailScreen() {
                     Số lượng tồn: {product.quantity}
                 </Text>
 
-                {/* THÔNG TIN CHI TIẾT */}
+                {/* ===== THÔNG TIN ===== */}
                 <View style={styles.infoBox}>
                     <Text style={styles.info}>📘 ISBN: {product.isbn}</Text>
+
                     <Text style={styles.info}>
-                        📂 Danh mục: {product.category?.name}
+                        📂 Danh mục: {getCategoryName(product.categoryId)}
                     </Text>
+
                     <Text style={styles.info}>
-                        ✍️ Tác giả: {product.author?.name}
+                        ✍️ Tác giả: {getAuthorName(product.authorId)}
                     </Text>
+
                     <Text style={styles.info}>
-                        🏢 NXB: {product.publisher?.name}
+                        🏢 NXB: {getPublisherName(product.publisherId)}
                     </Text>
+
                     <Text style={styles.info}>
                         📅 Xuất bản:{" "}
                         {product.publishedDate
-                            ? new Date(
-                                product.publishedDate
-                            ).toLocaleDateString()
+                            ? new Date(product.publishedDate).toLocaleDateString()
                             : "—"}
                     </Text>
 
                     <Text
                         style={[
                             styles.status,
-                            product.isActive
-                                ? styles.active
-                                : styles.inactive,
+                            product.isActive ? styles.active : styles.inactive,
                         ]}
                     >
-                        {product.isActive
-                            ? "🟢 Đang bán"
-                            : "🔴 Ngừng bán"}
+                        {product.isActive ? "🟢 Đang bán" : "🔴 Ngừng bán"}
                     </Text>
 
                     <Text style={styles.stockStatus}>{stockStatus}</Text>
                 </View>
 
-                {/* MÔ TẢ */}
                 <Text style={styles.desc}>
                     {product.description || "Chưa có mô tả"}
                 </Text>
 
-                {/* NÚT THÊM GIỎ */}
                 <TouchableOpacity
                     style={[
                         styles.btn,
@@ -161,7 +184,6 @@ export default function ProductDetailScreen() {
                     </Text>
                 </TouchableOpacity>
 
-                {/* QUAY LẠI */}
                 <TouchableOpacity
                     style={[styles.btn, styles.backBtn]}
                     onPress={() => router.back()}
@@ -173,70 +195,37 @@ export default function ProductDetailScreen() {
     );
 }
 
+/* ================= STYLE ================= */
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
-    center: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+    container: { flex: 1, backgroundColor: "#fff" },
+    center: { flex: 1, justifyContent: "center", alignItems: "center" },
     image: {
         width: "100%",
         height: 300,
         resizeMode: "contain",
         backgroundColor: "#f5f5f5",
     },
-    content: {
-        padding: 16,
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: "700",
-    },
+    content: { padding: 16 },
+    title: { fontSize: 18, fontWeight: "700" },
     price: {
         fontSize: 20,
         fontWeight: "700",
         color: "#ee4d2d",
         marginVertical: 8,
     },
-    stock: {
-        color: "#555",
-        marginBottom: 8,
-    },
+    stock: { color: "#555", marginBottom: 8 },
     infoBox: {
         backgroundColor: "#fafafa",
         padding: 12,
         borderRadius: 8,
         marginBottom: 12,
     },
-    info: {
-        fontSize: 14,
-        color: "#444",
-        marginBottom: 6,
-    },
-    status: {
-        marginTop: 6,
-        fontWeight: "700",
-    },
-    active: {
-        color: "green",
-    },
-    inactive: {
-        color: "red",
-    },
-    stockStatus: {
-        marginTop: 6,
-        fontWeight: "600",
-    },
-    desc: {
-        fontSize: 14,
-        color: "#333",
-        lineHeight: 20,
-        marginTop: 8,
-    },
+    info: { fontSize: 14, color: "#444", marginBottom: 6 },
+    status: { marginTop: 6, fontWeight: "700" },
+    active: { color: "green" },
+    inactive: { color: "red" },
+    stockStatus: { marginTop: 6, fontWeight: "600" },
+    desc: { fontSize: 14, color: "#333", lineHeight: 20, marginTop: 8 },
     btn: {
         marginTop: 16,
         backgroundColor: "#ee4d2d",
@@ -244,18 +233,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: "center",
     },
-    btnDisabled: {
-        backgroundColor: "#ccc",
-    },
-    btnText: {
-        color: "#fff",
-        fontWeight: "700",
-    },
-    backBtn: {
-        backgroundColor: "#eee",
-    },
-    backText: {
-        color: "#333",
-        fontWeight: "600",
-    },
+    btnDisabled: { backgroundColor: "#ccc" },
+    btnText: { color: "#fff", fontWeight: "700" },
+    backBtn: { backgroundColor: "#eee" },
+    backText: { color: "#333", fontWeight: "600" },
 });
