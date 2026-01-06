@@ -11,13 +11,19 @@ export const getProductById = async (id: number) => {
     const res = await axios.get(`${API_URL}/products/${id}`);
     return res.data;
 };
-
-export const getCategories = async () => {
-    const res = await axios.get(`${API_URL}/products/categories`);
-    return res.data;
+export const getProductsByCategory = async (categoryId: number) => {
+    const res = await axios.get(
+        `${API_URL}/products/category/${categoryId}`
+    );
+    return res.data.data;
 };
 
-export const getProductsByCategory = async (category: string) => {
-    const res = await axios.get(`${API_URL}/products/category/${category}`);
-    return res.data;
+export const getCategories = async () => {
+    const res = await axios.get(`${API_URL}/categories`);
+    return res.data.data; // lấy đúng data
+};
+
+export const getActiveCategories = async () => {
+    const res = await axios.get(`${API_URL}/categories/active`);
+    return res.data.data;
 };
