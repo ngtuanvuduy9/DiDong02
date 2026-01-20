@@ -135,6 +135,13 @@ export default function Profile() {
                 >
                     <Text style={styles.menuText}>🛒 Giỏ hàng của tôi</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => router.push("/orders")}
+                >
+                    <Text style={styles.menuText}>📦 Đơn hàng của tôi</Text>
+                </TouchableOpacity>
             </View>
 
             {/* LOGOUT */}
