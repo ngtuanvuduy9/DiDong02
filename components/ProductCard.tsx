@@ -15,7 +15,9 @@ export default function ProductCard({ item }: any) {
     const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
 
-    /* 🔥 KIỂM TRA SP CÓ TRONG FAVORITE KHÔNG */
+    /* =======================
+       CHECK FAVORITE
+    ======================= */
     useEffect(() => {
         checkFavorite();
     }, []);
@@ -23,10 +25,12 @@ export default function ProductCard({ item }: any) {
     const checkFavorite = async () => {
         const json = await AsyncStorage.getItem(FAVORITE_KEY);
         const favorites = json ? JSON.parse(json) : [];
-        const exists = favorites.some((p: any) => p.id === item.id);
-        setIsFavorite(exists);
+        setIsFavorite(favorites.some((p: any) => p.id === item.id));
     };
 
+    /* =======================
+       NAVIGATE
+    ======================= */
     const goDetail = () => {
         router.push({
             pathname: "/product/[id]",
@@ -34,7 +38,9 @@ export default function ProductCard({ item }: any) {
         });
     };
 
-    /* 🛒 THÊM GIỎ */
+    /* =======================
+       ADD TO CART
+    ======================= */
     const addToCart = async () => {
         const json = await AsyncStorage.getItem(CART_KEY);
         const cart = json ? JSON.parse(json) : [];
@@ -57,17 +63,29 @@ export default function ProductCard({ item }: any) {
         alert("Đã thêm vào giỏ hàng 🛒");
     };
 
-    /* ❤️ TOGGLE FAVORITE */
+    /* =======================
+       BUY NOW 🔥
+    ======================= */
+    const buyNow = () => {
+        router.push({
+            pathname: "/checkout",
+            params: {
+                ids: JSON.stringify([item.id]),
+            },
+        });
+    };
+
+    /* =======================
+       TOGGLE FAVORITE
+    ======================= */
     const toggleFavorite = async () => {
         const json = await AsyncStorage.getItem(FAVORITE_KEY);
         let favorites = json ? JSON.parse(json) : [];
 
         if (isFavorite) {
-            // ❌ XOÁ
             favorites = favorites.filter((p: any) => p.id !== item.id);
             setIsFavorite(false);
         } else {
-            // ✅ THÊM
             favorites.push({
                 id: item.id,
                 title: item.title,
@@ -82,11 +100,8 @@ export default function ProductCard({ item }: any) {
 
     return (
         <View style={styles.card}>
-            {/* ❤️ ICON */}
-            <TouchableOpacity
-                style={styles.favoriteIcon}
-                onPress={toggleFavorite}
-            >
+            {/* ❤️ FAVORITE */}
+            <TouchableOpacity style={styles.favoriteIcon} onPress={toggleFavorite}>
                 <Ionicons
                     name={isFavorite ? "heart" : "heart-outline"}
                     size={22}
@@ -94,12 +109,11 @@ export default function ProductCard({ item }: any) {
                 />
             </TouchableOpacity>
 
+            {/* IMAGE + INFO */}
             <TouchableOpacity onPress={goDetail}>
                 <Image
                     source={{
-                        uri:
-                            item.mainImage ||
-                            "https://via.placeholder.com/150",
+                        uri: item.mainImage || "https://via.placeholder.com/150",
                     }}
                     style={styles.image}
                 />
@@ -111,17 +125,26 @@ export default function ProductCard({ item }: any) {
                 </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cartBtn} onPress={addToCart}>
-                <Text style={styles.cartText}>Thêm vào giỏ</Text>
-            </TouchableOpacity>
+            {/* ACTION BUTTONS */}
+            <View style={styles.actionRow}>
+                {/* ADD CART */}
+                <TouchableOpacity style={styles.cartBtn} onPress={addToCart}>
+                    <Ionicons name="cart-outline" size={18} color="#fff" />
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.detailBtn} onPress={goDetail}>
-                <Text style={styles.detailText}>Xem chi tiết</Text>
-            </TouchableOpacity>
+                {/* BUY NOW */}
+                <TouchableOpacity style={styles.buyBtn} onPress={buyNow}>
+                    <Ionicons name="flash" size={18} color="#fff" />
+                    <Text style={styles.buyText}>Mua ngay</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
 
+/* =======================
+   STYLES
+======================= */
 const styles = StyleSheet.create({
     card: {
         backgroundColor: "#fff",
@@ -145,34 +168,37 @@ const styles = StyleSheet.create({
         color: "#ee4d2d",
         fontWeight: "700",
     },
-    cartBtn: {
-        marginTop: 6,
-        backgroundColor: "#ee4d2d",
-        paddingVertical: 6,
-        borderRadius: 6,
-        alignItems: "center",
-    },
-    cartText: {
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: "600",
-    },
-    detailBtn: {
-        marginTop: 8,
-        backgroundColor: "#007bff",
-        paddingVertical: 6,
-        borderRadius: 6,
-        alignItems: "center",
-    },
-    detailText: {
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: "600",
-    },
     favoriteIcon: {
         position: "absolute",
         top: 8,
         right: 8,
         zIndex: 10,
+    },
+    actionRow: {
+        flexDirection: "row",
+        gap: 6,
+        marginTop: 8,
+    },
+    cartBtn: {
+        backgroundColor: "#6c757d",
+        padding: 8,
+        borderRadius: 6,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    buyBtn: {
+        flex: 1,
+        flexDirection: "row",
+        gap: 4,
+        backgroundColor: "#ee4d2d",
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    buyText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "700",
     },
 });

@@ -1,44 +1,51 @@
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ForgotPasswordForm from "./ForgotPasswordForm";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-
-type ScreenType = "login" | "register";
 
 type Props = {
     onLoginSuccess?: () => void;
 };
 
 export default function AuthScreen({ onLoginSuccess }: Props) {
-    const [screen, setScreen] = useState<ScreenType>("login");
+    const [screen, setScreen] = useState<"login" | "register" | "forgot">("login");
 
     return (
         <View style={styles.container}>
             <Text style={styles.logo}>Sopi</Text>
 
             <View style={styles.card}>
-                {screen === "login" ? (
+                {screen === "login" && (
                     <LoginForm
-                        onForgotPassword={() => { }}
+                        onForgotPassword={() => setScreen("forgot")}
                         onRegister={() => setScreen("register")}
                         onLoginSuccess={onLoginSuccess}
                     />
-                ) : (
+                )}
+
+                {screen === "register" && (
                     <RegisterForm onBackToLogin={() => setScreen("login")} />
+                )}
+
+                {screen === "forgot" && (
+                    <ForgotPasswordForm onBackToLogin={() => setScreen("login")} />
                 )}
             </View>
 
-            <TouchableOpacity
-                onPress={() =>
-                    setScreen(screen === "login" ? "register" : "login")
-                }
-            >
-                <Text style={styles.switchText}>
-                    {screen === "login"
-                        ? "Chưa có tài khoản? Đăng ký"
-                        : "Đã có tài khoản? Đăng nhập"}
-                </Text>
-            </TouchableOpacity>
+            {screen !== "forgot" && (
+                <TouchableOpacity
+                    onPress={() =>
+                        setScreen(screen === "login" ? "register" : "login")
+                    }
+                >
+                    <Text style={styles.switchText}>
+                        {screen === "login"
+                            ? "Chưa có tài khoản? Đăng ký"
+                            : "Đã có tài khoản? Đăng nhập"}
+                    </Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 }

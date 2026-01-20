@@ -1,65 +1,27 @@
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import api from "./api";
 
-// const USERS_KEY = "users";
-// const CURRENT_USER_KEY = "currentUser";
 
-// // REGISTER
-// export const register = async (
-//     name: string,
-//     email: string,
-//     password: string
-// ) => {
-//     const users = JSON.parse(
-//         (await AsyncStorage.getItem(USERS_KEY)) || "[]"
-//     );
+/* =======================
+   FORGOT PASSWORD (OTP)
+======================= */
 
-//     const exists = users.find((u: any) => u.email === email);
-//     if (exists) {
-//         throw new Error("Email đã tồn tại");
-//     }
+// GỬI OTP
+export const forgotPassword = async (email: string) => {
+    const res = await api.post("/auth/forgot-password", { email });
+    return res.data;
+};
 
-//     const newUser = {
-//         id: Date.now(),
-//         name,
-//         email,
-//         password, // mock → không hash
-//     };
+// RESET PASSWORD
+export const resetPassword = async (
+    email: string,
+    otp: string,
+    newPassword: string
+) => {
+    const res = await api.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword,
+    });
 
-//     users.push(newUser);
-//     await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-//     return newUser;
-// };
-
-// // LOGIN
-// export const login = async (email: string, password: string) => {
-//     const users = JSON.parse(
-//         (await AsyncStorage.getItem(USERS_KEY)) || "[]"
-//     );
-
-//     const user = users.find(
-//         (u: any) => u.email === email && u.password === password
-//     );
-
-//     if (!user) {
-//         throw new Error("Sai email hoặc mật khẩu");
-//     }
-
-//     await AsyncStorage.setItem(
-//         CURRENT_USER_KEY,
-//         JSON.stringify(user)
-//     );
-
-//     return user;
-// };
-
-// // GET CURRENT USER
-// export const getCurrentUser = async () => {
-//     const user = await AsyncStorage.getItem(CURRENT_USER_KEY);
-//     return user ? JSON.parse(user) : null;
-// };
-
-// // LOGOUT
-// export const logout = async () => {
-//     await AsyncStorage.removeItem(CURRENT_USER_KEY);
-// };
+    return res.data;
+};

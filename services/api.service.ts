@@ -63,6 +63,10 @@ export const createCustomer = async (data: {
     const res = await api.post("/customers", data);
     return res.data.data;
 };
+export const getCustomerById = async (id: number) => {
+    const res = await api.get(`/customers/${id}`);
+    return res.data.data;
+};
 
 /* =======================
    ORDERS
