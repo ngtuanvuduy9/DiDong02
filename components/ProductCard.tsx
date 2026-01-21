@@ -66,7 +66,28 @@ export default function ProductCard({ item }: any) {
     /* =======================
        BUY NOW 🔥
     ======================= */
-    const buyNow = () => {
+    /* =======================
+       BUY NOW 🔥 (FIXED)
+    ======================= */
+    const buyNow = async () => {
+        const json = await AsyncStorage.getItem(CART_KEY);
+        let cart = json ? JSON.parse(json) : [];
+
+        const index = cart.findIndex((p: any) => p.id === item.id);
+
+        if (index === -1) {
+            // ❗ Chưa có trong cart → thêm tạm
+            cart.push({
+                id: item.id,
+                title: item.title,
+                price: item.price,
+                mainImage: item.mainImage,
+                quantity: 1,
+            });
+
+            await AsyncStorage.setItem(CART_KEY, JSON.stringify(cart));
+        }
+
         router.push({
             pathname: "/checkout",
             params: {
@@ -74,7 +95,6 @@ export default function ProductCard({ item }: any) {
             },
         });
     };
-
     /* =======================
        TOGGLE FAVORITE
     ======================= */

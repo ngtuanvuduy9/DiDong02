@@ -3,7 +3,7 @@ import { getApiUrl } from "../config/network";
 
 const api = axios.create({
     baseURL: getApiUrl(), // 👈 CHÍNH DÒNG NÀY
-    timeout: 10000,
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
