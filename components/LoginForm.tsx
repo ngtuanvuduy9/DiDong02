@@ -35,7 +35,7 @@ export default function LoginForm({ onForgotPassword, onLoginSuccess }: Props) {
         router.replace("/(tabs)");
       }
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Đăng nhập thất bại", "Email hoặc mật khẩu không đúng");
     }
   };
 

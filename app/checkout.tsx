@@ -58,6 +58,18 @@ export default function CheckoutScreen() {
     });
 
     /* =======================
+       VALIDATE
+    ======================= */
+    const isValidPhone = (phone: string) => {
+        return /^[0-9]{10}$/.test(phone);
+    };
+
+    const isValidEmail = (email: string) => {
+        if (!email) return true; // email không bắt buộc
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    /* =======================
        LOAD CART
     ======================= */
     useEffect(() => {
@@ -97,6 +109,16 @@ export default function CheckoutScreen() {
             return;
         }
 
+        if (!isValidPhone(customer.phone)) {
+            Alert.alert("Lỗi", "Số điện thoại phải gồm đúng 10 chữ số");
+            return;
+        }
+
+        if (!isValidEmail(customer.email || "")) {
+            Alert.alert("Lỗi", "Email không đúng định dạng");
+            return;
+        }
+
         if (items.length === 0) {
             Alert.alert("Lỗi", "Không có sản phẩm để đặt hàng");
             return;
@@ -110,7 +132,6 @@ export default function CheckoutScreen() {
                 ...customer,
                 isActive: true,
             });
-            console.log("✅ Customer created:", savedCustomer);
 
             // 2️⃣ CREATE ORDER
             const order = await createOrder({
@@ -122,9 +143,6 @@ export default function CheckoutScreen() {
                 notes: "Đặt hàng từ mobile app",
             });
 
-            console.log("✅ Order created:", order);
-            console.log("✅ Order ID:", order.id);
-
             // 3️⃣ CREATE ORDER ITEMS
             for (const item of items) {
                 await createOrderItem({
@@ -135,7 +153,6 @@ export default function CheckoutScreen() {
                     subtotal: item.price * item.quantity,
                 });
             }
-            console.log("✅ Order items created");
 
             // 4️⃣ REMOVE BOUGHT ITEMS FROM CART
             const json = await AsyncStorage.getItem(CART_KEY);
@@ -146,19 +163,17 @@ export default function CheckoutScreen() {
             );
 
             await AsyncStorage.setItem(CART_KEY, JSON.stringify(newCart));
-            console.log("✅ Cart updated");
 
-            // 5️⃣ AUTO NAVIGATE AFTER 1.5 SECONDS
+            // 5️⃣ NAVIGATE
             setLoading(false);
-            console.log("✅ Đặt hàng thành công! Chuyển trang trong 1.5s...");
-
             setTimeout(() => {
-                console.log("📍 Navigating to home...");
                 router.replace("/(tabs)");
             }, 1500);
         } catch (error: any) {
-            console.error("❌ ERROR:", error?.response?.data || error?.message || error);
-            Alert.alert("Lỗi", error?.response?.data?.message || "Không thể đặt hàng");
+            Alert.alert(
+                "Lỗi",
+                error?.response?.data?.message || "Không thể đặt hàng"
+            );
             setLoading(false);
         }
     };
@@ -173,7 +188,6 @@ export default function CheckoutScreen() {
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
-
                 <Text style={styles.headerTitle}>Thanh toán</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -194,6 +208,8 @@ export default function CheckoutScreen() {
                 <TextInput
                     placeholder="Email"
                     style={styles.input}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                     value={customer.email}
                     onChangeText={(text) =>
                         setCustomer({ ...customer, email: text })
@@ -204,9 +220,13 @@ export default function CheckoutScreen() {
                     placeholder="Số điện thoại"
                     style={styles.input}
                     keyboardType="phone-pad"
+                    maxLength={10}
                     value={customer.phone}
                     onChangeText={(text) =>
-                        setCustomer({ ...customer, phone: text })
+                        setCustomer({
+                            ...customer,
+                            phone: text.replace(/[^0-9]/g, ""),
+                        })
                     }
                 />
 

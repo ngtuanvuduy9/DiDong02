@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { register } from "../services/user.service";
 
 type Props = {
@@ -11,9 +18,33 @@ export default function RegisterForm({ onBackToLogin }: Props) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    /* =======================
+       VALIDATE
+    ======================= */
+    const isValidEmail = (email: string) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const isValidPassword = (password: string) => {
+        return password.length >= 6 && /[a-zA-Z]/.test(password);
+    };
+
     const handleRegister = async () => {
         if (!name || !email || !password) {
             Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            Alert.alert("Lỗi", "Email không đúng định dạng");
+            return;
+        }
+
+        if (!isValidPassword(password)) {
+            Alert.alert(
+                "Lỗi",
+                "Mật khẩu phải có ít nhất 6 ký tự và chứa chữ cái"
+            );
             return;
         }
 
@@ -22,7 +53,7 @@ export default function RegisterForm({ onBackToLogin }: Props) {
             Alert.alert("Thành công", "Đăng ký thành công");
             onBackToLogin();
         } catch (err: any) {
-            Alert.alert("Lỗi", err.message);
+            Alert.alert("Lỗi", err.message || "Đăng ký thất bại");
         }
     };
 
@@ -30,8 +61,22 @@ export default function RegisterForm({ onBackToLogin }: Props) {
         <View>
             <Text style={styles.title}>Đăng ký</Text>
 
-            <TextInput placeholder="Họ tên" style={styles.input} value={name} onChangeText={setName} />
-            <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} />
+            <TextInput
+                placeholder="Họ tên"
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+            />
+
+            <TextInput
+                placeholder="Email"
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+            />
+
             <TextInput
                 placeholder="Mật khẩu"
                 style={styles.input}
