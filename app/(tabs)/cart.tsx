@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 10,
+        padding: 20,
     },
     checkbox: {
         fontSize: 16,

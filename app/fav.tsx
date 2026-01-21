@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         marginBottom: 10,
+        padding: 20,
     },
     back: {
         fontSize: 14,
